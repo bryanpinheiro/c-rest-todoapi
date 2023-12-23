@@ -21,7 +21,9 @@ int executeSQLFromFile(sqlite3 *db, const char *filename);
 int insertTodoItem(sqlite3 *db, const char *title, int completed);
 int updateTodoCompleted(sqlite3 *db, int todoID, int completed);
 int deleteTodoByID(sqlite3 *db, int todoID);
+TodoItem *getTodoByID(sqlite3 *db, int todoID);
 TodoListWithCount getAllTodoItemsWithCount(sqlite3 *db, const char *filename);
 void displayTodos(TodoItem *todoList, int length);
+sqlite3 *initializeDatabase();
 
 #endif /* TODO_H */

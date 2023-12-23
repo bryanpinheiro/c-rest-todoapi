@@ -3,6 +3,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+sqlite3 *initializeDatabase() {
+  sqlite3 *db;
+  int rc = sqlite3_open("todos.db", &db);
+
+  if (rc != SQLITE_OK) {
+      fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+      sqlite3_close(db);
+      return NULL;
+  }
+
+  // Check if the 'todos' table exists
+  int table_exists = 0;
+  sqlite3_stmt *stmt;
+  const char *query = "SELECT name FROM sqlite_master WHERE type='table' AND name='todos';";
+  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) == SQLITE_OK) {
+      if (sqlite3_step(stmt) == SQLITE_ROW) {
+          table_exists = 1;
+      }
+      sqlite3_finalize(stmt);
+  }
+
+  if (!table_exists) {
+      // Table does not exist, create it
+      if (executeSQLFromFile(db, "sql/create_todos.sql") != 0) {
+          sqlite3_close(db);
+          return NULL;
+      }
+      printf("Todos table created successfully!\n");
+  }
+
+  return db;
+}
+
 char *readSQLFromFile(const char *filename)
 {
   FILE *file = fopen(filename, "r");
@@ -71,6 +104,60 @@ int insertTodoItem(sqlite3 *db, const char *title, int completed)
 
   printf("Todo item inserted successfully!\n");
   return 0;
+}
+
+TodoItem *getTodoByID(sqlite3 *db, int todoID) {
+    TodoItem *todo = NULL; // Initialize with zeros
+
+    // Read the SQL query from file
+    char *sql = readSQLFromFile("sql/get_todo_by_id.sql");
+    if (!sql) {
+        return todo; // Return an empty TodoItem on SQL query failure
+    }
+
+    // Replace placeholders in the SQL query with the provided todoID
+    size_t query_len = strlen(sql) + 20; // Initial estimation of query length
+    char *query = malloc(query_len); // Allocate memory for the query
+    if (!query) {
+        free(sql);
+        return todo; // Return an empty TodoItem on memory allocation failure
+    }
+
+    snprintf(query, query_len, sql, todoID);
+    free(sql); // Free the original SQL query
+
+    // Prepare the SQL statement
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+    free(query); // Free the query string
+    if (rc != SQLITE_OK) {
+        // Handle error in preparing the statement
+        return todo; // Return an empty TodoItem
+    }
+
+    // Execute the SQL statement
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        // Fetch the values from the query result
+        todo = malloc(sizeof(TodoItem));
+        if (todo) {
+          todo->id = sqlite3_column_int(stmt, 0);
+          const unsigned char *title = sqlite3_column_text(stmt, 1);
+          if (title) {
+              size_t length = strlen((const char *)title);
+              todo->title = malloc(length + 1); // Allocate memory for title
+              if (todo->title) {
+                  strcpy((char *)todo->title, (const char *)title);
+              }
+          }
+          todo->completed = sqlite3_column_int(stmt, 2);
+        }
+    }
+
+    // Finalize the SQL statement
+    sqlite3_finalize(stmt);
+
+    return todo;
 }
 
 int updateTodoCompleted(sqlite3 *db, int todoID, int completed)

@@ -39,7 +39,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Todo"
+                "$ref": "#/components/schemas/InputCreateTodo"
               }
             }
           }
@@ -47,6 +47,90 @@
         "responses": {
           "201": {
             "description": "Todo created"
+          }
+        }
+      }
+    },
+    "/api/todos/{id}": {
+      "get": {
+        "summary": "Get a todo by ID",
+        "description": "Get a specific todo by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "ID of the todo to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Todo found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todo not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a todo by ID",
+        "description": "Update an existing todo by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "ID of the todo to update"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InputUpdateTodo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todo updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a todo by ID",
+        "description": "Delete an existing todo by its ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "ID of the todo to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Todo deleted"
           }
         }
       }
@@ -63,8 +147,24 @@
           "title": {
             "type": "string"
           },
-          "description": {
+          "completed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InputCreateTodo": {
+        "type": "object",
+        "properties": {
+          "title": {
             "type": "string"
+          }
+        }
+      },
+      "InputUpdateTodo": {
+        "type": "object",
+        "properties": {
+          "completed": {
+            "type": "boolean"
           }
         }
       }

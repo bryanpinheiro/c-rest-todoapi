@@ -271,7 +271,7 @@ handleRequest(void *cls,
     int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
     MHD_destroy_response(response);
     return ret;
-  }else if (strcmp(url, "/api/todos") == 0)
+  } else if (strcmp(url, "/api/todos") == 0 || strstr(url, "/api/todos/") != NULL)
   {
     return handleTodoRoutes(cls, connection, url, method, version, upload_data, upload_data_size, ptr);
   }
@@ -292,8 +292,6 @@ int main(int argc, char **argv)
     printf("%s PORT\n", argv[0]);
     return 1;
   }
-
-  initTodos(); // Initialize todos
 
   // Start the MicroHTTPD daemon, passing the handleRequest function for routing
   d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION,
